@@ -21,3 +21,8 @@ El proyecto está organizado en varias carpetas que contienen documentación y s
 
 - [📁 **Librerouter 1 & 2**](./LibreRouter%201%20%26%202%20-%20KDT/)  
   Estudio y comparativas de direcciones de memoria, kdt, archivos dts, etc. de ambos dispositivos.
+
+
+### Referencias
+  https://libremesh.org/packages/
+  https://github.com/libremesh/lime-packages/tree/master/packages/safe-upgrade
