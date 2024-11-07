@@ -165,6 +165,33 @@ function configure_finalize()
 	kconfig_wipe_register
 }
 
+function target_librerouter_r2()
+{
+	kconfig_init_register
+
+	echo "" > "$KCONFIG_CONFIG_PATH"
+	kconfig_set CONFIG_TARGET_ramips
+	kconfig_set CONFIG_TARGET_ramips_mt7621
+	kconfig_set CONFIG_TARGET_ramips_mt7621_DEVICE_librerouter_librerouter-r2
+
+	# G10h4ck 2023-09-02:
+	# Running `make defconfig` here to generate de default configuration is
+	# necessary, otherwise the added packages configuration will be mangled
+	# by the next run of `make defconfig` in an unrealiable manner
+	make defconfig
+
+	#configure_atheros_radio_drivers
+	configure_librerouteros
+	configure_firstboot_wizard
+
+	kconfig_set CONFIG_PACKAGE_safe-upgrade
+
+	kconfig_set CONFIG_PACKAGE_kmod-mt7916-firmware
+
+	configure_build_log
+	configure_finalize
+}
+
 function target_librerouter_v1()
 {
 	kconfig_init_register
@@ -305,8 +332,11 @@ librerouter-r2)
 	prepare_target_buildroot "$BUILD_TARGET"
 	pushd "$LIBREROUTEROS_BUILD_DIR"
 
-	echo "" > "$KCONFIG_CONFIG_PATH"
-	# export KCONFIG_CONFIG_PATH="$(find_kernel_owrt_base_config)"
+	target_librerouter_r2
+
+
+	#echo "" > "$KCONFIG_CONFIG_PATH"
+	export KCONFIG_CONFIG_PATH="$(find_kernel_owrt_base_config)"
 	kconfig_init_register
 	# Disable kernel command line being read from device tree which is mutually
 	# exclusive with reading it from boot loader
@@ -339,14 +369,30 @@ librerouter-r2)
 	# Support librerouter 1 radios
 	kconfig_set CONFIG_PACKAGE_kmod-ath9k
 
-	configure_librerouteros
-	configure_build_log
-	configure_finalize
 
 	owrt_build
 
 	$BUILD_DOWNLOAD_ONLY || ls -alh \
 		bin/targets/ramips/mt7621/librerouteros-*-ramips-mt7621-librerouter_librerouter-r2-squashfs-sysupgrade.bin
+
+
+	# BUILD_DOWNLOAD_ONLY || 
+	# {
+	# 	# Look for compiled Linux kernel .config
+	# 	mBuildDir="${LIBREROUTEROS_BUILD_DIR}/build_dir/target-mips_24kc_musl/linux-ath79_generic/"
+	# 	pushd "$mBuildDir"
+	# 	kBuildConfigPath="${mBuildDir}/$(find -regextype posix-extended -regex '\./linux-[0-9]+\.[0-9]+(\.[0-9]+)?/\.config')"
+	# 	popd
+
+	# 	# Check compiled Linux kernel configuration are constistent with
+	# 	# safe-upgrade requirements
+	# 	kconfig_check "$kBuildConfigPath"
+	# 	kconfig_wipe_register
+
+	# 	# Fail if the image wasn't created
+	# 	ls -alh bin/targets/ath79/generic/librerouteros-*-ath79-generic-librerouter_librerouter-r2-squashfs-sysupgrade.bin
+	# }
+
 
 	popd &> /dev/null
 	;;
